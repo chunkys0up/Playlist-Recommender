@@ -9,5 +9,4 @@ export default defineConfig({
     port: 8000,
     host: '127.0.0.1',
   },
-  base: '/home/',
 })

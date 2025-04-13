@@ -1,15 +1,24 @@
 import React, { useState } from "react";
 import spotifyLogo from "../assets/spotifyLogo.png";
+import { useNavigate } from "react-router-dom"
+
 
 const SpotifyAuth = () => {
   const [authToken, setAuthToken] = useState(null);
+  const navigate = useNavigate();
+
+  const goToHome = () => {
+    navigate("/home");
+  }
+
 
   // Function to get the auth token
   const getAuthToken = async () => {
+
+    //if I can't get the auth to work then ima just use my client id and secret so i can atleast see the project somewhat through
     const clientId = "12ed23b64caa401299d408c9643b2616";
     const clientSecret = "151e0a72b7654b1abc008c54a790963a";
 
-    // Base64 encode clientId and clientSecret
     const encodedCredentials = btoa(`${clientId}:${clientSecret}`);
 
     try {
@@ -25,7 +34,12 @@ const SpotifyAuth = () => {
       });
 
       const data = await response.json();
-      setAuthToken(data.access_token); // Store the auth token in state
+      
+      //need to use local storage so it persists over multiple components
+      localStorage.setItem("spotify_token", data.access_token);
+      //setAuthToken(data.access_token); // Store the auth token in state
+
+      goToHome();
       console.log("Successfully got token");
     } catch (error) {
       console.error("Error fetching token:", error);
