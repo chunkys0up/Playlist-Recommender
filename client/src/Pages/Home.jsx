@@ -15,6 +15,7 @@ export default function Home() {
   const [selectedPlanet, setSelectedPlanet] = useState(null);
   const [showThirdBox, setShowThirdBox] = useState(false);
   const [playlists, setPlaylists] = useState([]);
+  const [playlist_id, setPlaylist_id] = useState("");
 
   const planetData = [
     { name: "Mercury", icon: <Zap /> },
@@ -66,9 +67,12 @@ export default function Home() {
     // at this point, we need to filter the invalid/null playlists out
     const allPlaylists = data.playlists?.items || [];
 
-    const validPlaylists = allPlaylists.filter(
-      (p) => p && p.name && p.external_urls?.spotify
-    );
+    const validPlaylists = allPlaylists
+      .filter((p) => p && p.name && p.id)
+      .map((p) => ({
+        name: p.name,
+        id: p.id,
+      }));
 
     console.log("Playlist items are correctly sent");
     //only need 10 playlists
@@ -81,7 +85,7 @@ export default function Home() {
       searchPlaylists(planetVibes[selectedPlanet]).then((items) => {
         // makes sure the playlist exists
         if (!items || !Array.isArray(items)) {
-          console.warn("⚠️ No playlists returned or data is invalid", items);
+          console.warn("No playlists returned or data is invalid", items);
           return;
         }
         // the prompt that was put into the spotify search
@@ -89,8 +93,8 @@ export default function Home() {
 
         // get the name and url to make sure they are actual playlists and prints them
         items.forEach((p, i) => {
-          if (p?.name && p?.external_urls?.spotify) {
-            console.log(` ${i + 1}. ${p.name}: ${p.external_urls.spotify}`);
+          if (p?.name && p?.id) {
+            console.log(` ${i + 1}. ${p.name}: ${p.id}`);
           } else {
             // Used as a notification that the playlist doesn't exist or is null (the error of the 2nd box)
             console.warn(" Invalid playlist object:", p);
@@ -140,22 +144,26 @@ export default function Home() {
               Playlists for {selectedPlanet}
             </h1>
 
-            <ul className="flex flex-col w-full">
+            <ul className="list-disc list-outside w-full pl-6">
               {playlists.length > 0 ? (
-                playlists.map((p, i) =>
-                  p && p.name && p.external_urls?.spotify ? (
-                    <li key={i} className="w-full">
-                      <button
-                        className="w-full text-left py-3 px-4 rounded-md hover:bg-gray-200 transition text-blue-700 font-medium"
-                        onClick={() => {
-                          window.open(p.external_urls.spotify, "_blank");
-                          setShowThirdBox(true);
-                        }}
-                      >
-                        🎵 {p.name}
-                      </button>
-                    </li>
-                  ) : null
+                playlists.map(
+                  (p, i) =>
+                    p &&
+                    p.name &&
+                    p.id && (
+                      <li key={i} className="w-full">
+                        <button
+                          className="text-left py-3 px-2 rounded-md hover:bg-gray-200 transition text-black font-medium w-full"
+                          onClick={() => {
+                            console.log("Clicked playlist ID:", p.id);
+                            setPlaylist_id(p.id);
+                            setShowThirdBox(true);
+                          }}
+                        >
+                          {p.name}
+                        </button>
+                      </li>
+                    )
                 )
               ) : (
                 <p className="text-gray-500 text-center w-full mt-4">
@@ -168,14 +176,18 @@ export default function Home() {
 
         {/* Third Box */}
         {showThirdBox && (
-          <div className="w-[500px] h-[600px] bg-white rounded-lg shadow-lg flex flex-col justify-center items-center">
-            <h2 className="text-2xl font-semibold mb-4 text-gray-800">
-              Deep Dive into {selectedPlanet}
-            </h2>
-            <p className="text-gray-600 text-center px-8">
-              This is more in-depth information about {selectedPlanet}, maybe
-              including moons, atmosphere, or interesting facts.
-            </p>
+          <div className="w-[500px] h-[600px] bg-white rounded-xl shadow-lg flex flex-col justify-center items-center">
+            
+            {/* Displays a live spotify playlist */}
+            <iframe
+              title="Spotify Embed: Recommendation Playlist "
+              src={`https://open.spotify.com/embed/playlist/${playlist_id}?utm_source=generator&theme=0`}
+              width="100%"
+              height="100%"
+              style={{ minHeight: "360px" }}
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              loading="lazy"
+            />
           </div>
         )}
       </div>
